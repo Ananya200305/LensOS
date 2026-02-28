@@ -12,14 +12,12 @@ def get_current_user(
         session: Session = Depends(get_db), 
         authorization: Annotated[Union[str,None], Header()] = None) -> UserOutput:
     
-    print("Authorization header:", authorization)  # Debugging statement
     
     auth_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Invalid authentication credentials")
     
     if not authorization:
-        print("herrrre")
         raise auth_exception
 
     if not authorization.startswith(AUTH_PREFIX):
