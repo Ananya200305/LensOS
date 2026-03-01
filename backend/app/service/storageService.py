@@ -49,15 +49,18 @@ def generate_presigned_url(file_key: str, expires_in: int = 86400):
 
 # Upload file to S3 (private bucket)
 def upload_file_to_s3(file, user_id: int):
-    file_key = generate_file_name(user_id, file.filename)
-
+    
     try:
+        file_key = generate_file_name(user_id, file.filename)
+
         s3_client.upload_fileobj(
             file.file,
             AWS_BUCKET_NAME,
             file_key,
             ExtraArgs={"ContentType": file.content_type},
         )
+
+        return file_key
 
     except Exception as e:
         raise HTTPException(
@@ -66,4 +69,3 @@ def upload_file_to_s3(file, user_id: int):
         )
 
     #IMPORTANT: return file_key (NOT URL anymore)
-    return file_key
