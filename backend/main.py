@@ -1,4 +1,5 @@
 from fastapi import Depends, FastAPI, UploadFile, File
+from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from app.utils.init_db import create_tables
 from app.routers.auth import authRouter
@@ -14,6 +15,20 @@ async def lifespan(app: FastAPI):
     yield
 
 app = FastAPI(lifespan=lifespan)
+origins = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
 app.include_router(router=authRouter, tags=["auth"], prefix="/auth")
 app.include_router(router=assetRouter, tags=["asset"], prefix="/asset")
 #/auth/login
