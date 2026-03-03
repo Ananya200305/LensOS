@@ -7,6 +7,7 @@ from app.routers.asset import assetRouter
 from app.utils.protectRoute import get_current_user
 from app.db.schema.user import UserOutput
 from app.service.storageService import upload_file_to_s3
+from app.service.captionService import generate_caption_and_tags
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
