@@ -29,4 +29,16 @@ class AssetRepository(BaseRepository):
     def get_asset_by_user_id(self, user_id: int):
             asset = self.session.query(Asset).filter(Asset.user_id == user_id).order_by(Asset.created_at.desc()).all() 
             return asset
+    
+    def get_asset_by_asset_id(self, asset_id: int):
+        asset = self.session.query(Asset).filter(Asset.id == asset_id).first() 
+        return asset
+    
+    def delete_asset(self, asset: Asset):
+        try:
+            self.session.delete(asset)
+            self.session.commit()
+        except Exception as e:
+            self.session.rollback()
+            raise HTTPException(status_code=500, detail="Database Delete error: " + str(e))
 

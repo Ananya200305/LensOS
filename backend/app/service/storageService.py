@@ -69,3 +69,12 @@ def upload_file_to_s3(file, user_id: int):
         )
 
     #IMPORTANT: return file_key (NOT URL anymore)
+
+def delete_file_from_s3(file_key: str):
+    try:
+        s3_client.delete_object(Bucket=AWS_BUCKET_NAME, Key=file_key)
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"S3 File deletion failed: {str(e)}",
+        )

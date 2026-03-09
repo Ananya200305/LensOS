@@ -40,3 +40,16 @@ def get_user_asset(session: Session = Depends(get_db), current_user: int = Depen
             status_code=500,
             detail=f"Get asset endpoint failed: {str(e)}"
         )
+
+@assetRouter.delete("/delete/{asset_id}")
+def delete_user_asset(asset_id: int, session: Session = Depends(get_db), current_user: int = Depends(get_current_user)):
+    try:
+        asset = AssetService(session=session).delete_asset(user_id=current_user.id, asset_id=asset_id)
+        return {"message": "Asset deleted successfully"}
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Delete asset endpoint failed: {str(e)}"
+        )

@@ -1,7 +1,7 @@
 import json
 from fastapi import UploadFile, HTTPException
 from sqlalchemy.orm import Session
-from app.service.storageService import upload_file_to_s3, generate_presigned_url
+from app.service.storageService import upload_file_to_s3, generate_presigned_url, delete_file_from_s3
 from app.db.repository.assetRepo import AssetRepository
 from app.service.captionService import generate_caption_and_tags
 
@@ -52,3 +52,21 @@ class AssetService:
             })
 
         return response
+    
+    
+    def delete_asset(self, user_id: int, asset_id: int):
+        asset = self.__assetRepo.get_asset_by_asset_id(asset_id=asset_id)
+
+        if not asset:
+            raise HTTPException(status_code=404, detail="Asset not found")
+        
+        if asset.user_id != user_id:
+            raise HTTPException(status_code=403, detail="Unauthorized to delete this asset")
+        
+        #delete from s3
+        delete_file_from_s3(file_key=asset.file_key)
+
+        #delete from DB
+        self.__assetRepo.delete_asset(asset=asset)
+
+        return {"message": "Asset deleted successfully"}
