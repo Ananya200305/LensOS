@@ -4,15 +4,13 @@ from fastapi import HTTPException
 
 class AssetRepository(BaseRepository):
     
-    def create_asset(self, user_id: int, file_key: str, caption: str = None, tag: list = None):
+    def create_asset(self, user_id: int, file_key: str):
 
         try:
             new_asset = Asset(
                 user_id = user_id,
                 file_key = file_key,
-                status = "uploaded",
-                captions = caption,
-                tags = tag or []
+                status = "uploaded"
             )
 
             self.session.add(instance = new_asset)

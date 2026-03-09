@@ -14,6 +14,14 @@ client = OpenAI(
 
 
 def generate_caption_and_tags(image_url: str) -> dict:
+    """
+    Generates caption and tags using Gemma 3n vision model.
+    Returns:
+        {
+            "caption": str,
+            "tags": list[str]
+        }
+    """
 
     try:
         completion = client.chat.completions.create(

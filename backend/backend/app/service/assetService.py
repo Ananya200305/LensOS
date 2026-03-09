@@ -1,9 +1,7 @@
-import json
 from fastapi import UploadFile, HTTPException
 from sqlalchemy.orm import Session
 from app.service.storageService import upload_file_to_s3, generate_presigned_url
 from app.db.repository.assetRepo import AssetRepository
-from app.service.captionService import generate_caption_and_tags
 
 class AssetService: 
     def __init__(self, session: Session):
@@ -15,16 +13,8 @@ class AssetService:
             #upload to s3
             file_key = upload_file_to_s3(file=file, user_id=user_id)
 
-            #generate img URL for captioning
-            image_url = generate_presigned_url(file_key=file_key)
-
-            #generate caption and tags using AI pipeline
-            ai_response = generate_caption_and_tags(image_url=image_url)
-            img_caption = ai_response["caption"]
-            img_tags = ai_response["tags"]
-
             #save to DB
-            asset = self.__assetRepo.create_asset(user_id=user_id, file_key=file_key, caption=img_caption, tag=img_tags)
+            asset = self.__assetRepo.create_asset(user_id=user_id, file_key=file_key)
 
             return asset
         
@@ -41,13 +31,11 @@ class AssetService:
 
         for asset in assets: 
             signed_url = generate_presigned_url(file_key = asset.file_key)
-            tags = asset.tags 
             response.append({
                 "id": asset.id,
                 "image_url": signed_url,
                 "status": asset.status,
                 "caption": asset.captions,
-                "tags": tags,
                 "created_at": asset.created_at
             })
 
