@@ -34,6 +34,10 @@ class AssetRepository(BaseRepository):
         asset = self.session.query(Asset).filter(Asset.id == asset_id).first() 
         return asset
     
+    def get_assets_by_asset_ids(self, asset_ids: list):
+        assets = self.session.query(Asset).filter(Asset.id.in_(asset_ids)).all()
+        return assets
+    
     def delete_asset(self, asset: Asset):
         try:
             self.session.delete(asset)

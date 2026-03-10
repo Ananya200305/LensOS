@@ -53,3 +53,14 @@ def delete_user_asset(asset_id: int, session: Session = Depends(get_db), current
             status_code=500,
             detail=f"Delete asset endpoint failed: {str(e)}"
         )
+    
+@assetRouter.post("/search")
+def search_assets(query: str, session: Session = Depends(get_db), current_user: int = Depends(get_current_user)):
+    try: 
+        result = AssetService(session=session).search_asset(user_id=current_user.id, query=query)
+        return result
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Search asset endpoint failed: {str(e)}"
+        )

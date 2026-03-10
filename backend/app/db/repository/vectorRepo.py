@@ -23,11 +23,12 @@ class VectorRepository:
 
     def search_vector(self, query_embedding: list, limit: int = 5):
         try:
-            results = client.search(
+            results = client.query_points(
                 collection_name = COLLECTION_NAME,
-                query_vector = query_embedding,
+                query = query_embedding,
                 limit = limit
             )
+            return results.points
         except Exception as e: 
             raise HTTPException(status_code=500, detail="Vector search failed: " + str(e))
         

@@ -80,3 +80,40 @@ class AssetService:
         VectorService().delete_vector( asset_id=asset.id)
 
         return {"message": "Asset deleted successfully"}
+    
+    def search_asset(self, user_id: int, query: str):
+
+        #step1: generate embedding for the query
+        query_embedding = generate_embedding(text=query)
+
+        #step2: search in vector DB and get relevant asset IDs
+        search_results = VectorService().search_similar_vectors(query_embedding=query_embedding)
+
+        asset_ids = [result.id for result in search_results]
+
+        if not asset_ids:
+            return []
+        
+        #step3: fetch asset details from DB and return
+        assets = self.__assetRepo.get_assets_by_asset_ids(asset_ids=asset_ids)
+
+        response = []
+
+        for asset in assets: 
+            if asset.user_id != user_id:
+                continue
+
+            signed_url = generate_presigned_url(asset.file_key)
+
+            response.append({
+            "id": asset.id,
+            "image_url": signed_url,
+            "caption": asset.captions,
+            "tags": asset.tags,
+            "score": next(
+                (r.score for r in search_results if r.id == asset.id),
+                None
+            )
+        })
+            
+            return response
