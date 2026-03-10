@@ -25,7 +25,7 @@ class AssetService:
             img_caption = ai_response["caption"]
             img_tags = ai_response["tags"]
 
-            embedding_text = img_caption + " " + " ".join(img_tags)
+            embedding_text = f"caption: {img_caption}. tags: {' '.join(img_tags)}"
             vector_emebedding = generate_embedding(text=embedding_text)
 
             #save to DB
@@ -87,7 +87,7 @@ class AssetService:
         query_embedding = generate_embedding(text=query)
 
         #step2: search in vector DB and get relevant asset IDs
-        search_results = VectorService().search_similar_vectors(query_embedding=query_embedding)
+        search_results = VectorService().search_similar_vectors(user_id = user_id, query_embedding=query_embedding)
 
         asset_ids = [result.id for result in search_results]
 
