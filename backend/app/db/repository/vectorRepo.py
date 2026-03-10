@@ -35,7 +35,7 @@ class VectorRepository:
         try:
             client.delete(
                 collection_name = COLLECTION_NAME,
-                points_selector = {asset_id}
+                points_selector = [asset_id]
             )
         except Exception as e:
             raise HTTPException(status_code=500, detail="Vector deletion failed: " + str(e))

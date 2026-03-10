@@ -27,7 +27,6 @@ class AssetService:
 
             embedding_text = img_caption + " " + " ".join(img_tags)
             vector_emebedding = generate_embedding(text=embedding_text)
-            print("Generated embedding: ", vector_emebedding)
 
             #save to DB
             asset = self.__assetRepo.create_asset(user_id=user_id, file_key=file_key, caption=img_caption, tag=img_tags)
@@ -76,5 +75,8 @@ class AssetService:
 
         #delete from DB
         self.__assetRepo.delete_asset(asset=asset)
+
+        #delete from Qdrant
+        VectorService().delete_vector( asset_id=asset.id)
 
         return {"message": "Asset deleted successfully"}
