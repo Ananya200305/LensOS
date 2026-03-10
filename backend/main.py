@@ -7,12 +7,14 @@ from app.routers.asset import assetRouter
 from app.utils.protectRoute import get_current_user
 from app.db.schema.user import UserOutput
 from app.service.storageService import upload_file_to_s3
-from app.service.embeddingService import generate_embedding
+from app.utils.init_vector_db import init_vector
+# from app.service.embeddingService import generate_embedding
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print("created")
     create_tables()
+    init_vector()
     yield
 
 app = FastAPI(lifespan=lifespan)
