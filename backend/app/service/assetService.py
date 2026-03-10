@@ -1,9 +1,11 @@
 import json
 from fastapi import UploadFile, HTTPException
+from app.service.embeddingService import generate_embedding
 from sqlalchemy.orm import Session
 from app.service.storageService import upload_file_to_s3, generate_presigned_url, delete_file_from_s3
 from app.db.repository.assetRepo import AssetRepository
 from app.service.captionService import generate_caption_and_tags
+from app.service.vectorService import VectorService
 
 class AssetService: 
     def __init__(self, session: Session):
@@ -23,8 +25,14 @@ class AssetService:
             img_caption = ai_response["caption"]
             img_tags = ai_response["tags"]
 
+            embedding_text = img_caption + " " + " ".join(img_tags)
+            vector_emebedding = generate_embedding(text=embedding_text)
+            print("Generated embedding: ", vector_emebedding)
+
             #save to DB
             asset = self.__assetRepo.create_asset(user_id=user_id, file_key=file_key, caption=img_caption, tag=img_tags)
+
+            VectorService().store_vector(asset_id=asset.id, user_id=user_id, embedding=vector_emebedding)
 
             return asset
         
