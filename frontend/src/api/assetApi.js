@@ -22,5 +22,6 @@ export const searchAsset = async (query) => {
     const response = await api.post('/asset/search', null, {
         params: { query }
     })
+    console.log(response)
     return response
 }
