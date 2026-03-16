@@ -12,3 +12,15 @@ export const getAssets = async () => {
     const response = await api.get('/asset')
     return response
 }
+
+export const deleteAsset = async (id) => {
+    const response = await api.delete(`/asset/delete/${id}`)
+    return response
+}
+
+export const searchAsset = async (query) => {
+    const response = await api.post('/asset/search', null, {
+        params: { query }
+    })
+    return response
+}
