@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from "react";
 import UploadButton from "../components/UploadButton";
 import ImageCard from "../components/ImageCard";
-import { getAssets, deleteAsset, searchAsset } from "../api/assetApi";
+import { getAssets, deleteAsset, searchAsset, uploadAsset } from "../api/assetApi";
 import { Search, LogOut } from "lucide-react";
+import {useNavigate} from 'react-router-dom'
 
 function DashboardPage() {
   const [images, setImages] = useState([]);
   const [searchQuery, setSearchQuery] = useState("")
+  const [isUploading, setIsUploading] = useState(false)
+
+  const navigate = useNavigate()
 
   const fetchImages = async () => {
     try {
@@ -16,6 +20,18 @@ function DashboardPage() {
       console.log(error);
     }
   };
+
+  const handleUpload = async (file) => {
+    try {
+      setIsUploading(true);
+      await uploadAsset(file);
+      await fetchImages();
+    } catch (error) {
+      console.log(error)
+    }finally{
+      setIsUploading(false)
+    }
+  }
 
   const handleDelete = async (id) => {
     try{
@@ -42,13 +58,19 @@ function DashboardPage() {
     }
   };
 
+  const handleLogout = () => {
+    if (!window.confirm("Are you sure you want to logout?")) return;
+    localStorage.removeItem("token")
+    navigate('/login')
+  }
+
   useEffect(() => {
     fetchImages();
   }, []);
 
   return (
     <div className="bg-[#000000] min-h-screen text-white">
-
+      <div className={isUploading ? "pointer-events-none opacity-70" : ""}>
       {/* NAVBAR */}
       <div className="flex items-center justify-between px-10 py-5 border-b border-[#1E293B]">
 
@@ -83,7 +105,7 @@ function DashboardPage() {
 
         {/* RIGHT */}
         <div className="flex items-center gap-4">
-          <button className="flex items-center gap-2 bg-[#3d5571] px-5 py-2 rounded-full text-sm hover:bg-[#24599c]">
+          <button onClick={handleLogout} className="flex items-center gap-2 bg-[#3d5571] px-5 py-2 rounded-full text-sm hover:bg-[#24599c]">
             <LogOut size={16} />
             Logout
           </button>
@@ -107,7 +129,7 @@ function DashboardPage() {
             </p>
           </div>
 
-          <UploadButton onUpload={fetchImages} />
+          <UploadButton onUpload={handleUpload} isUploading={isUploading} />
         </div>
 
         {/* EMPTY STATE */}
@@ -125,6 +147,24 @@ function DashboardPage() {
         </div>
 
       </div>
+    </div>
+      {isUploading && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center">
+    
+          <div className="flex flex-col items-center gap-4">
+
+            {/* Spinner */}
+            <div className="w-12 h-12 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
+
+            {/* Text */}
+            <p className="text-white text-lg font-semibold">
+                Uploading...
+            </p>
+
+          </div>
+
+        </div>
+      )}
     </div>
   );
 }
