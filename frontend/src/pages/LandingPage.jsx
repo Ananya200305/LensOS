@@ -1,5 +1,6 @@
-import React from "react";
+import {React, useState} from "react";
 import { useNavigate } from "react-router-dom";
+import DemoModal from "../components/DemoModal";
 
 const images = [
   "https://images.unsplash.com/photo-1507525428034-b723cf961d3e",
@@ -11,6 +12,7 @@ const images = [
 ];
 
 export default function LandingPage() {
+  const [showDemo, setShowDemo] = useState(false)
   const navigate = useNavigate()
 
   const handleLoginClick = () => {
@@ -64,7 +66,7 @@ export default function LandingPage() {
               Get Started →
             </button>
 
-            <button className="bg-[#141a2b] px-6 py-3 rounded-lg hover:bg-[#1d243a]">
+            <button className="bg-[#141a2b] px-6 py-3 rounded-lg hover:bg-[#1d243a]" onClick={() => setShowDemo(true)}>
               View Demo
             </button>
           </div>
@@ -155,6 +157,8 @@ export default function LandingPage() {
 
         <span>© 2026 LensOS</span>
       </footer>
+
+      <DemoModal isOpen={showDemo} onClose={() => setShowDemo(false)} />
 
     </div>
   );
