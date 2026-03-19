@@ -21,12 +21,20 @@ class VectorRepository:
             raise HTTPException(status_code=500, detail="Vector insertion failed: " + str(e))
         
 
-    def search_vector(self,query_embedding: list, limit: int = 5):
+    def search_vector(self,user_id: int,query_embedding: list, limit: int = 5):
         try:
             results = client.query_points(
                 collection_name = COLLECTION_NAME,
                 query = query_embedding,
-                limit = limit
+                limit = limit,
+                query_filter = Filter(
+                    must = [
+                        FieldCondition(
+                            key = "user_id",
+                            match = MatchValue(value=user_id)
+                        )
+                    ]
+                )
             )
             return results.points
         except Exception as e: 

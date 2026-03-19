@@ -25,7 +25,7 @@ class AssetService:
             img_caption = ai_response["caption"]
             img_tags = ai_response["tags"]
 
-            embedding_text = img_caption + " " + " ".join(img_tags)
+            embedding_text = f"caption: {img_caption}. tags: {' '.join(img_tags)}"
             vector_emebedding = generate_embedding(text=embedding_text)
 
             #save to DB
@@ -87,9 +87,10 @@ class AssetService:
         query_embedding = generate_embedding(text=query)
 
         #step2: search in vector DB and get relevant asset IDs
-        search_results = VectorService().search_similar_vectors(query_embedding=query_embedding)
+        search_results = VectorService().search_similar_vectors(user_id = user_id, query_embedding=query_embedding)
+        print("Raw search results from vector DB:", search_results)
 
-        asset_ids = [result.id for result in search_results]
+        asset_ids = [result.payload['asset_id'] for result in search_results]
 
         if not asset_ids:
             return []
@@ -97,22 +98,29 @@ class AssetService:
         #step3: fetch asset details from DB and return
         assets = self.__assetRepo.get_assets_by_asset_ids(asset_ids=asset_ids)
 
+        asset_map = {asset.id: asset for asset in assets}
+
         response = []
 
-        for asset in assets: 
+        for result in search_results: 
+            asset_id = result.payload['asset_id']
+            asset = asset_map.get(asset_id)
+
+            if not asset:
+                print("problem is here")
+                continue
+            
             if asset.user_id != user_id:
+                print("problem is here 1")
                 continue
 
             signed_url = generate_presigned_url(asset.file_key)
 
             response.append({
-            "id": asset.id,
-            "image_url": signed_url,
-            "caption": asset.captions,
-            "tags": asset.tags,
-            "score": next(
-                (r.score for r in search_results if r.id == asset.id),
-                None
-            )
-        })
+                "id": asset.id,
+                "image_url": signed_url,
+                "caption": asset.captions,
+                "tags": asset.tags,
+                "score": result.score
+            })
         return response
