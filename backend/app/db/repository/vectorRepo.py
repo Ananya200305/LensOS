@@ -3,6 +3,8 @@ from app.db.models.image_embedding import COLLECTION_NAME
 from qdrant_client.models import PointStruct,Filter, FieldCondition, MatchValue
 from fastapi import HTTPException
 
+threshold = 0.5
+
 class VectorRepository:
 
     def create_vector(self, asset_id: int, user_id: int, embedding: list):
@@ -36,7 +38,8 @@ class VectorRepository:
                     ]
                 )
             )
-            return results.points
+            filtered_points = [point for point in results.points if point.score >= threshold]
+            return filtered_points
         except Exception as e: 
             raise HTTPException(status_code=500, detail="Vector search failed: " + str(e))
         

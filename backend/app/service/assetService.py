@@ -88,7 +88,6 @@ class AssetService:
 
         #step2: search in vector DB and get relevant asset IDs
         search_results = VectorService().search_similar_vectors(user_id = user_id, query_embedding=query_embedding)
-        print("Raw search results from vector DB:", search_results)
 
         asset_ids = [result.payload['asset_id'] for result in search_results]
 
