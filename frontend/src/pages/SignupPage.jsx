@@ -4,70 +4,95 @@ import { useNavigate } from "react-router-dom";
 import { signupUser } from "../api/authApi";
 import ValidationItem from "../components/ValidationItem";
 
-function SignupPage() {
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [agree, setAgree] = useState(false);
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+const validate = (form) => {
+  const errors = {};
 
-  const validations = {
-    length: password.length >= 8,
-    uppercase: /[A-Z]/.test(password),
-    lowercase: /[a-z]/.test(password),
-    number: /\d/.test(password),
-    special: /[@$!%*?&]/.test(password),
+
+  if (!form.firstName) errors.firstName = "First name required";
+  else if (!/^[A-Za-z]+$/.test(form.firstName))
+    errors.firstName = "Only letters allowed";
+
+
+  if (!form.lastName) errors.lastName = "Last name required";
+  else if (!/^[A-Za-z]+$/.test(form.lastName))
+    errors.lastName = "Only letters allowed";
+
+
+  if (!form.email) errors.email = "Email required";
+  else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email))
+    errors.email = "Invalid email";
+
+
+  if (!form.password) errors.password = "Password required";
+  else {
+    if (form.password.length < 8) errors.password = "Min 8 chars";
+    else if (!/[A-Z]/.test(form.password)) errors.password = "1 uppercase";
+    else if (!/[a-z]/.test(form.password)) errors.password = "1 lowercase";
+    else if (!/\d/.test(form.password)) errors.password = "1 number";
+    else if (!/[@$!%*?&]/.test(form.password)) errors.password = "1 special";
+  }
+
+
+  if (!form.confirmPassword)
+    errors.confirmPassword = "Confirm password";
+  else if (form.password !== form.confirmPassword)
+    errors.confirmPassword = "Passwords do not match";
+
+
+  if (!form.agree) errors.agree = "Accept terms";
+
+
+  return errors;
+};
+
+function SignupPage() {
+  const [form, setForm] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    agree: false,
+  });
+
+  const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+
+    const updatedForm = {
+      ...form,
+      [name]: type === "checkbox" ? checked : value,
+    };
+
+    setForm(updatedForm);
+
+    // live validation
+    setErrors((prev) => ({
+      ...prev,
+      [name]: validate(updatedForm)[name],
+    }));
   };
 
-  const isPasswordValid = Object.values(validations).every(Boolean);
+  const passwordRules = {
+  length: form.password.length >= 8,
+  uppercase: /[A-Z]/.test(form.password),
+  lowercase: /[a-z]/.test(form.password),
+  number: /\d/.test(form.password),
+  special: /[@$!%*?&]/.test(form.password),
+};
 
-  const isFormValid =
-    firstName &&
-    lastName &&
-    email &&
-    password &&
-    confirmPassword &&
-    password === confirmPassword &&
-    isPasswordValid &&
-    agree;
+  const isFormValid = Object.keys(validate(form)).length === 0;
 
   const navigate = useNavigate();
 
-  const validateForm = () => {
-    if (!firstName || !lastName || !email || !password || !confirmPassword) {
-      return "All fields are required";
-    }
-
-    if (!/^[A-Za-z]+$/.test(firstName) || !/^[A-Za-z]+$/.test(lastName)) {
-      return "Name should contain only letters";
-    }
-
-    if (password !== confirmPassword) {
-      return "Passwords do not match";
-    }
-
-    if (password.length < 8) {
-      return "Password must be at least 8 characters";
-    }
-
-    return null;
-  };
-
   const handleSignup = async () => {
-    setError("");
+    const validationErrors = validate(form);
 
-    if (!agree) {
-      setError("Please accept Terms of Service");
-      return;
-    }
-
-    const validationError = validateForm();
-    if (validationError) {
-      setError(validationError);
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
       return;
     }
 
@@ -75,15 +100,20 @@ function SignupPage() {
       setLoading(true);
 
       await signupUser({
-        first_name: firstName.trim(),
-        last_name: lastName.trim(),
-        email: email,
-        password: password,
+        first_name: form.firstName.trim(),
+        last_name: form.lastName.trim(),
+        email: form.email.trim(),
+        password: form.password,
       });
 
       navigate("/login");
     } catch (err) {
-      setError(err.response?.data?.detail?.[0]?.msg || "Signup failed");
+      setErrors({
+        api:
+          err?.response?.data?.message ||
+          err?.message ||
+          "Signup failed",
+      });
     } finally {
       setLoading(false);
     }
@@ -121,12 +151,16 @@ function SignupPage() {
             <div className="flex items-center bg-[#020617] border border-[#1E293B] rounded-xl mt-2 px-3">
               <User size={18} className="text-gray-400" />
               <input
+                name="firstName"
                 type="text"
+                value={form.firstName}
                 placeholder="John"
                 className="bg-transparent outline-none px-3 py-3 w-full text-sm"
-                onChange={(e) => setFirstName(e.target.value)}
+                onChange={handleChange}
               />
+              
             </div>
+            {errors.firstName && <p className="text-red-400 text-xs mt-1">{errors.firstName}</p>}
           </div>
 
           <div>
@@ -135,12 +169,15 @@ function SignupPage() {
             <div className="flex items-center bg-[#020617] border border-[#1E293B] rounded-xl mt-2 px-3">
               <User size={18} className="text-gray-400" />
               <input
+                name="lastName"
                 type="text"
+                value={form.lastName}
                 placeholder="Doe"
                 className="bg-transparent outline-none px-3 py-3 w-full text-sm"
-                onChange={(e) => setLastName(e.target.value)}
+                onChange={handleChange}
               />
             </div>
+            {errors.lastName && <p className="text-red-400 text-xs mt-1">{errors.lastName}</p>}
           </div>
         </div>
 
@@ -152,12 +189,15 @@ function SignupPage() {
             <Mail size={18} className="text-gray-400" />
 
             <input
+              name="email"
               type="email"
+              value={form.email}
               placeholder="name@company.com"
               className="bg-transparent outline-none px-3 py-3 w-full text-sm"
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={handleChange}
             />
           </div>
+          {errors.email && <p className="text-red-400 text-xs mt-1">{errors.email}</p>}
         </div>
 
         {/* PASSWORD */}
@@ -168,10 +208,12 @@ function SignupPage() {
             <Lock size={18} className="text-gray-400" />
 
             <input
+              name="password"
               type={showPassword ? "text" : "password"}
+              value={form.password}
               placeholder="••••••••"
               className="bg-transparent outline-none px-3 py-3 w-full text-sm"
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={handleChange}
             />
 
             <button
@@ -185,20 +227,20 @@ function SignupPage() {
         </div>
         <div className="text-xs space-y-1 mb-3 mt-2">
           <ValidationItem
-            valid={validations.length}
+            valid={passwordRules.length}
             text="At least 8 characters"
           />
           <ValidationItem
-            valid={validations.uppercase}
+            valid={passwordRules.uppercase}
             text="One uppercase letter"
           />
           <ValidationItem
-            valid={validations.lowercase}
+            valid={passwordRules.lowercase}
             text="One lowercase letter"
           />
-          <ValidationItem valid={validations.number} text="One number" />
+          <ValidationItem valid={passwordRules.number} text="One number" />
           <ValidationItem
-            valid={validations.special}
+            valid={passwordRules.special}
             text="One special character"
           />
         </div>
@@ -209,20 +251,22 @@ function SignupPage() {
             <Lock size={18} className="text-gray-400" />
 
             <input
+              name="confirmPassword"
               type="password"
+              value={form.confirmPassword}
               placeholder="••••••••"
               className="bg-transparent outline-none px-3 py-3 w-full text-sm"
-              onChange={(e) => setConfirmPassword(e.target.value)}
+              onChange={handleChange}
             />
           </div>
         </div>
-        {confirmPassword && (
+        {form.confirmPassword && (
           <p
             className={`text-xs mb-3 ${
-              password === confirmPassword ? "text-green-400" : "text-red-400"
+              form.password === form.confirmPassword ? "text-green-400" : "text-red-400"
             }`}
           >
-            {password === confirmPassword
+            {form.password === form.confirmPassword
               ? "Passwords match"
               : "Passwords do not match"}
           </p>
@@ -232,8 +276,9 @@ function SignupPage() {
         <div className="flex items-center gap-2 text-sm text-gray-400 mb-6">
           <input
             type="checkbox"
-            checked={agree}
-            onChange={() => setAgree(!agree)}
+            name="agree"
+            checked={form.agree}
+            onChange={handleChange}
           />
 
           <span>
@@ -256,8 +301,8 @@ function SignupPage() {
         >
           {loading ? "Creating Account..." : "Get Started →"}
         </button>
-        {error && (
-          <p className="text-red-400 text-sm mt-3 text-center">{error}</p>
+        {errors.api && (
+          <p className="text-red-400 text-sm mt-3 text-center">{errors.api}</p>
         )}
 
         {/* DIVIDER */}
