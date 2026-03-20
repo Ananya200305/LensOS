@@ -1,11 +1,11 @@
 import { Trash2 } from "lucide-react";
 
-function ImageCard({ img, caption, tags, onDelete }) {
+function ImageCard({ img, caption, tags, onDelete, onClick }) {
 
   const tagList = tags ? JSON.parse(tags) : [];
 
   return (
-    <div className="bg-[#000000] border border-[#282829] rounded-2xl p-4 relative group">
+    <div className="bg-[#000000] border border-[#282829] rounded-2xl p-4 relative group" onClick={onClick}>
 
       {/* DELETE BUTTON */}
       <button
