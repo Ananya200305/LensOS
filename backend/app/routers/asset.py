@@ -10,11 +10,7 @@ assetRouter = APIRouter()
 @assetRouter.post("/upload", status_code=201)
 async def upload_asset(file: UploadFile, session: Session = Depends(get_db), current_user: int = Depends(get_current_user)):
     try: 
-
-        #1. Validate file
         file = await validate_file(file=file)
-
-        #2. call service 
         asset = AssetService(session=session).upload_user_asset(user_id=current_user.id, file=file)
 
         return {
@@ -23,6 +19,8 @@ async def upload_asset(file: UploadFile, session: Session = Depends(get_db), cur
             "file_key": asset.file_key,
             "status": asset.status
         }
+    except HTTPException as he:
+        raise he
     
     except Exception as e:
         raise HTTPException(
@@ -35,10 +33,25 @@ def get_user_asset(session: Session = Depends(get_db), current_user: int = Depen
     try: 
         assets = AssetService(session=session).get_asset_for_user(user_id=current_user.id)
         return assets
+    except HTTPException as he:
+        raise he
     except Exception as e:
         raise HTTPException(
             status_code=500,
             detail=f"Get asset endpoint failed: {str(e)}"
+        )
+
+@assetRouter.get("/{asset_id}/status")
+def get_asset_status(asset_id: int, session: Session = Depends(get_db), current_user: int = Depends(get_current_user)):
+    try:
+        asset = AssetService(session=session).get_asset_status(user_id=current_user.id, asset_id=asset_id)
+        return asset
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Get asset status endpoint failed: {str(e)}"
         )
 
 @assetRouter.delete("/delete/{asset_id}")
@@ -58,7 +71,10 @@ def delete_user_asset(asset_id: int, session: Session = Depends(get_db), current
 def search_assets(query: str, session: Session = Depends(get_db), current_user: int = Depends(get_current_user)):
     try: 
         result = AssetService(session=session).search_asset(user_id=current_user.id, query=query)
+        print("Search result:", result)
         return result
+    except HTTPException as he:
+        raise he
     except Exception as e:
         raise HTTPException(
             status_code=500,

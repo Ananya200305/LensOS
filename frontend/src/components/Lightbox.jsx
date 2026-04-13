@@ -9,9 +9,34 @@ function Lightbox({ images, index, setIndex, onClose }) {
   };
 
   const prev = () => {
-    setIndex((prev) =>
-      prev === 0 ? images.length - 1 : prev - 1
-    );
+    setIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
+  };
+
+  const generateFileName = (caption) => {
+    if (!caption) return "image";
+
+    // Ensure it's a string
+    const safeCaption = String(caption);
+
+    return safeCaption
+      .toLowerCase()
+      .replace(/[^a-z0-9\s]/g, "")
+      .trim()
+      .replace(/\s+/g, "_")
+      .slice(0, 50);
+  };
+
+  const downloadOriginal = (image) => {
+    const fileName = generateFileName(image.caption);
+
+    const link = document.createElement("a");
+    link.href = image.image_url;
+    link.setAttribute("download", `${fileName}.jpg`);
+    link.setAttribute("target", "_blank"); // fallback
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   useEffect(() => {
@@ -29,8 +54,7 @@ function Lightbox({ images, index, setIndex, onClose }) {
 
   return (
     <div className="fixed inset-0 bg-black flex flex-col z-50">
-
-      {/* 🔝 TOP BAR */}
+      {/*TOP BAR */}
       <div className="flex justify-between items-center px-6 py-4 border-b border-[#1E293B]">
         <p className="text-sm text-gray-400">
           {index + 1} / {images.length}
@@ -46,9 +70,6 @@ function Lightbox({ images, index, setIndex, onClose }) {
 
       {/*IMAGE AREA */}
       <div className="flex-1 flex flex-col items-center justify-center relative px-4">
-
-        {/* Caption ABOVE image */}
-    
         {/* Left */}
         <button
           onClick={prev}
@@ -70,15 +91,19 @@ function Lightbox({ images, index, setIndex, onClose }) {
         >
           <ChevronRight size={28} className="text-white" />
         </button>
-
       </div>
 
       {/*BOTTOM ACTION BAR */}
       <div className="border-t border-[#1E293B] px-6 py-4 bg-black/80 backdrop-blur">
-
         <div className="flex justify-between items-center">
-
           <div className="flex gap-3">
+            <button
+              onClick={() => downloadOriginal(image)}
+              className="px-3 py-1 bg-[#1E293B] rounded hover:bg-[#334155]"
+            >
+              Download
+            </button>
+
             <button className="px-3 py-1 bg-[#1E293B] rounded hover:bg-[#334155]">
               Edit
             </button>
@@ -91,11 +116,8 @@ function Lightbox({ images, index, setIndex, onClose }) {
           <p className="text-xs text-gray-500">
             Score: {image.score?.toFixed(2) ?? "N/A"}
           </p>
-
         </div>
-
       </div>
-
     </div>
   );
 }

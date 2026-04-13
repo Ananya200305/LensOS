@@ -3,11 +3,11 @@ from app.db.models.image_embedding import COLLECTION_NAME
 from qdrant_client.models import PointStruct,Filter, FieldCondition, MatchValue
 from fastapi import HTTPException
 
-threshold = 0.5
+threshold = 0.15
 
 class VectorRepository:
 
-    def create_vector(self, asset_id: int, user_id: int, embedding: list):
+    def upsert_vector(self, asset_id: int, user_id: int, embedding: list):
         try:
             client.upsert(
                 collection_name=COLLECTION_NAME,
@@ -39,6 +39,7 @@ class VectorRepository:
                 )
             )
             filtered_points = [point for point in results.points if point.score >= threshold]
+            print(filtered_points)
             return filtered_points
         except Exception as e: 
             raise HTTPException(status_code=500, detail="Vector search failed: " + str(e))
@@ -50,4 +51,7 @@ class VectorRepository:
                 points_selector = [asset_id]
             )
         except Exception as e:
+            error_message = str(e).lower()
+            if "not found" in error_message or "does not exist" in error_message:
+                return
             raise HTTPException(status_code=500, detail="Vector deletion failed: " + str(e))

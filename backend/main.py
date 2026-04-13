@@ -8,7 +8,6 @@ from app.utils.protectRoute import get_current_user
 from app.db.schema.user import UserOutput
 from app.service.storageService import upload_file_to_s3
 from app.utils.init_vector_db import init_vector
-# from app.service.embeddingService import generate_embedding
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -49,5 +48,4 @@ def test_upload(file: UploadFile = File(...)):
     """
     url = upload_file_to_s3(file, user_id=1)
     return {"image_url": url}
-
 
