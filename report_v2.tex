@@ -1,0 +1,685 @@
+\documentclass[12pt,a4paper]{report}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage[a4paper,margin=1in]{geometry}
+\usepackage{setspace}
+\usepackage{graphicx}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{tabularx}
+\usepackage{float}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{listings}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{multirow}
+\usepackage{caption}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue,
+  urlcolor=blue,
+  citecolor=blue,
+  pdftitle={LensOS Version 2 Project Report},
+  pdfauthor={Your Name},
+  pdfsubject={Major Project Report}
+}
+
+\definecolor{codebg}{RGB}{248,248,248}
+\definecolor{codeframe}{RGB}{220,220,220}
+\definecolor{coderule}{RGB}{0,92,184}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  backgroundcolor=\color{codebg},
+  frame=single,
+  rulecolor=\color{codeframe},
+  breaklines=true,
+  showstringspaces=false,
+  captionpos=b
+}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0pt}
+
+\titleformat{\chapter}[display]
+  {\normalfont\bfseries\Large}
+  {\chaptername\ \thechapter}
+  {10pt}
+  {\Huge}
+
+\setstretch{1.3}
+
+\begin{document}
+
+\begin{titlepage}
+    \centering
+    {\Large \textbf{MAJOR PROJECT REPORT}}\\[1.2cm]
+    {\large on}\\[0.4cm]
+    {\Huge \textbf{LensOS Version 2}}\\[0.5cm]
+    {\Large \textbf{An Intelligent Semantic Image Management and Retrieval System}}\\[1.2cm]
+
+    \vfill
+
+    \begin{tabular}{rl}
+        \textbf{Submitted by:} & Your Name \\
+        \textbf{Roll Number:} & Your Roll Number \\
+        \textbf{Program:} & B.Tech./B.E. in Computer Science / Related Department \\
+        \textbf{Academic Session:} & 2025--2026 \\
+    \end{tabular}
+
+    \vfill
+
+    {\large Submitted in partial fulfillment of the requirements for the award of the degree of}\\[0.4cm]
+    {\Large \textbf{Bachelor of Technology}}\\[0.4cm]
+    {\large in}\\[0.2cm]
+    {\Large \textbf{Computer Science and Engineering}}\\[1cm]
+
+    {\large Department of Computer Science and Engineering}\\
+    {\large Name of College / University}\\
+    {\large City, State, Country}\\[1cm]
+
+    {\large May 2026}
+\end{titlepage}
+
+\pagenumbering{roman}
+
+\chapter*{Certificate}
+This is to certify that the project report entitled \textbf{``LensOS Version 2: An Intelligent Semantic Image Management and Retrieval System''} is a bonafide record of the work carried out by \textbf{Your Name} under the guidance of \textbf{Guide Name}, submitted in partial fulfillment of the requirements for the degree of \textbf{Bachelor of Technology in Computer Science and Engineering}.
+
+\vspace{2cm}
+\noindent
+\begin{tabularx}{\textwidth}{X X}
+\textbf{Project Guide} & \textbf{Head of Department} \\
+Name and Signature & Name and Signature \\
+\end{tabularx}
+
+\vspace{2cm}
+\noindent
+\textbf{External Examiner} \hfill \textbf{Date}
+
+\chapter*{Declaration}
+I hereby declare that the work presented in this report entitled \textbf{``LensOS Version 2: An Intelligent Semantic Image Management and Retrieval System''} is an original work carried out by me. This report has not been submitted, either in part or in full, for the award of any other degree, diploma, or certificate.
+
+\vspace{2cm}
+\noindent
+\textbf{Your Name}\\
+\textbf{Roll Number}\\
+\textbf{Date}
+
+\chapter*{Acknowledgement}
+I express my sincere gratitude to my project guide, faculty members, department staff, friends, and family members who supported me throughout the development of this project. Their guidance, technical suggestions, and encouragement played an important role in the successful completion of LensOS Version 2. I would also like to acknowledge the open-source ecosystem and the modern AI tooling stack that made it possible to design, implement, and evaluate an intelligent semantic image retrieval platform.
+
+\chapter*{Abstract}
+The rapid growth of digital image collections has made traditional filename-based and folder-based organization methods inadequate for efficient retrieval. Users often remember the semantic meaning of an image, such as the scene, object, or moment captured, rather than its exact file name or storage location. To address this limitation, this project presents \textbf{LensOS Version 2}, an AI-powered semantic image management system that enables intelligent upload, automatic caption generation, metadata extraction, vector embedding creation, and meaning-based image search.
+
+LensOS Version 2 is designed as a full-stack web application with a modular architecture. The frontend is built using React and Vite, while the backend is implemented using FastAPI. PostgreSQL is used for structured metadata storage, Amazon S3 is used for secure image storage, Redis with RQ is used for background job processing, and Qdrant is used as the vector database for semantic similarity search. The system employs CLIP-based multimodal embeddings for matching text queries with image content and uses a vision-language model pipeline to generate concise captions and tags automatically.
+
+Compared with a basic image management workflow, the second version introduces asynchronous asset processing, queue-driven scalability, private cloud storage, presigned URL access, vector search isolation by user, and a better separation between upload, processing, and retrieval components. These improvements make the system more robust, scalable, and suitable for real-world deployment.
+
+The proposed system demonstrates how multimodal AI, cloud storage, and vector databases can be integrated into a practical software product. LensOS Version 2 reduces manual tagging effort, improves image discoverability, and provides a foundation for future extensions such as album recommendations, duplicate detection, advanced analytics, multilingual search, and mobile integration.
+
+\tableofcontents
+\listoftables
+\listoffigures
+
+\clearpage
+\pagenumbering{arabic}
+
+\chapter{Introduction}
+\section{Background}
+The increasing availability of smartphones, digital cameras, and cloud platforms has resulted in a dramatic rise in personal and professional image collections. Although image capture has become effortless, image organization and retrieval remain difficult. Conventional systems rely on filenames, folder structures, manual tags, or timestamps. These approaches are often insufficient because users typically search for images using natural language concepts such as ``beach at sunset'', ``friends smiling'', or ``my trip photos'' rather than exact filenames.
+
+Recent advances in multimodal artificial intelligence have enabled machines to understand relationships between text and images within a shared semantic space. This makes it possible to search images by meaning instead of manually curated metadata. LensOS Version 2 leverages these advances to build a semantic image retrieval platform that provides an intuitive and scalable experience.
+
+\section{Problem Statement}
+Traditional image storage systems suffer from the following limitations:
+\begin{itemize}[leftmargin=*]
+    \item Retrieval depends heavily on filenames or manually maintained folders.
+    \item Manual tagging is time-consuming and inconsistent.
+    \item Large collections become difficult to navigate and manage.
+    \item Real-time AI processing can slow down the user experience if handled synchronously.
+    \item Basic systems do not support robust semantic search across natural language queries.
+\end{itemize}
+
+\section{Need for Version 2}
+LensOS Version 1 established the idea of intelligent image understanding. However, a production-oriented semantic image platform requires better modularity, asynchronous execution, privacy-aware storage, retrieval performance, and maintainability. Version 2 addresses these needs through service decomposition, background processing, vector indexing, and improved user flow.
+
+\section{Objectives}
+The major objectives of LensOS Version 2 are:
+\begin{itemize}[leftmargin=*]
+    \item To build a secure full-stack platform for image upload and management.
+    \item To automatically generate captions and tags for uploaded images.
+    \item To create multimodal vector embeddings for images and text.
+    \item To enable semantic search using natural language queries.
+    \item To use asynchronous background workers for heavy processing tasks.
+    \item To store images securely and serve them using temporary presigned URLs.
+    \item To design a modular architecture that supports future scaling and feature expansion.
+\end{itemize}
+
+\section{Scope of the Project}
+The project focuses on semantic image retrieval for authenticated users. Each user can upload images, wait for background AI processing, and later search only within their own image collection. The current implementation emphasizes correctness, modularity, privacy, and deployment readiness. The system is suitable for applications such as personal photo libraries, creative asset management, marketing content retrieval, and educational dataset organization.
+
+\chapter{Literature Survey}
+\section{Overview}
+Semantic image retrieval is an active research and development area that combines computer vision, natural language processing, vector representations, and scalable databases. Traditional content-based image retrieval systems relied on handcrafted features such as color histograms, edge descriptors, and texture maps. While useful, these methods were limited in their ability to capture semantic meaning.
+
+\section{Evolution of Image Retrieval}
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Metadata-based retrieval:} Uses filenames, folders, timestamps, and manually entered tags.
+    \item \textbf{Content-based image retrieval:} Uses visual descriptors extracted from the image itself.
+    \item \textbf{Deep learning-based retrieval:} Uses convolutional and transformer-based models for feature learning.
+    \item \textbf{Multimodal retrieval:} Maps both text and images into a shared embedding space for semantic matching.
+\end{itemize}
+
+\section{Relevant Technologies in the Domain}
+\subsection{CLIP}
+CLIP (Contrastive Language-Image Pretraining) is a multimodal model that aligns text and image representations in the same vector space. It is particularly useful for zero-shot classification and semantic retrieval because a text query can be directly compared with image embeddings.
+
+\subsection{Vector Databases}
+Vector databases such as Qdrant, Pinecone, Milvus, and Weaviate are optimized for similarity search on high-dimensional embeddings. They are a key enabler of modern semantic search systems.
+
+\subsection{Vision-Language Models}
+Vision-language models can generate captions, summaries, or labels from images. These outputs improve explainability and help users understand why an image appears in a search result.
+
+\section{Research Gap}
+Many existing systems either focus only on vector similarity or only on cloud storage and asset management. LensOS Version 2 attempts to bridge this gap by integrating:
+\begin{itemize}[leftmargin=*]
+    \item secure cloud image storage,
+    \item structured metadata persistence,
+    \item asynchronous AI processing,
+    \item semantic vector retrieval,
+    \item and a user-friendly full-stack interface.
+\end{itemize}
+
+\section{Summary}
+The literature and current industry practice clearly indicate the value of combining vector search, multimodal AI models, and cloud-based infrastructure. LensOS Version 2 is a practical implementation aligned with these emerging patterns.
+
+\chapter{Existing System and Proposed System}
+\section{Existing System}
+Conventional image repositories usually follow a basic workflow: upload an image, store it in a local or cloud location, attach minimal metadata, and later retrieve it through filename or manually assigned tags. While functional for small collections, such systems degrade rapidly as the number of assets increases.
+
+\subsection{Limitations of Existing Approaches}
+\begin{itemize}[leftmargin=*]
+    \item No semantic understanding of image content.
+    \item Search quality depends on user-entered tags.
+    \item Limited automation for captioning and classification.
+    \item Slow or fragile behavior if AI processing is done inline.
+    \item Weak separation of storage, metadata, and retrieval concerns.
+\end{itemize}
+
+\section{Proposed System}
+The proposed system, LensOS Version 2, introduces an AI-driven image asset workflow:
+\begin{enumerate}[leftmargin=*]
+    \item User signs up and logs in.
+    \item User uploads an image.
+    \item The image is validated and stored in a private S3 bucket.
+    \item Asset metadata is stored in PostgreSQL with \texttt{pending} status.
+    \item A background job is placed into an RQ queue.
+    \item A worker downloads the image, generates caption and tags, computes CLIP embedding, and inserts the vector into Qdrant.
+    \item The asset is marked \texttt{ready} and becomes searchable.
+    \item The user performs semantic search using natural language.
+\end{enumerate}
+
+\section{Advantages of the Proposed System}
+\begin{itemize}[leftmargin=*]
+    \item Better user experience due to asynchronous processing.
+    \item Semantic search based on meaning instead of filenames.
+    \item Strong modularity through service and repository layers.
+    \item Secure cloud storage using private bucket access.
+    \item Scalable architecture suitable for more advanced future features.
+\end{itemize}
+
+\chapter{System Analysis and Requirements}
+\section{Functional Requirements}
+The main functional requirements of LensOS Version 2 are:
+\begin{itemize}[leftmargin=*]
+    \item User registration and login.
+    \item JWT-based authenticated access.
+    \item Image upload with file type and size validation.
+    \item Background asset processing pipeline.
+    \item Automatic caption and tag generation.
+    \item Storage of metadata and asset status.
+    \item Semantic image search using text queries.
+    \item Asset deletion with synchronized storage and vector cleanup.
+    \item Dashboard display of user-specific assets and processing states.
+\end{itemize}
+
+\section{Non-Functional Requirements}
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Performance:} Search and retrieval should remain responsive even for growing collections.
+    \item \textbf{Scalability:} Processing and storage layers should be independently scalable.
+    \item \textbf{Security:} User assets must remain isolated and protected.
+    \item \textbf{Reliability:} Failures in AI processing should not corrupt metadata state.
+    \item \textbf{Maintainability:} Codebase should be modular and easy to extend.
+    \item \textbf{Usability:} Frontend should be intuitive for non-technical users.
+\end{itemize}
+
+\section{Software Requirements}
+\begin{table}[H]
+\centering
+\caption{Software Requirements}
+\begin{tabularx}{\textwidth}{|l|X|}
+\hline
+\textbf{Component} & \textbf{Technology} \\
+\hline
+Frontend & React, Vite, Tailwind CSS, Axios \\
+\hline
+Backend API & FastAPI, Python \\
+\hline
+Authentication & JWT-based token flow \\
+\hline
+Relational Database & PostgreSQL \\
+\hline
+Cloud Storage & Amazon S3 \\
+\hline
+Queue / Background Jobs & Redis, RQ \\
+\hline
+Vector Database & Qdrant \\
+\hline
+Embedding Model & OpenAI CLIP ViT Base Patch32 \\
+\hline
+Captioning / Tagging & Vision-language model via API routing \\
+\hline
+\end{tabularx}
+\end{table}
+
+\section{Hardware Requirements}
+\begin{itemize}[leftmargin=*]
+    \item Development laptop/desktop with internet connectivity.
+    \item Minimum 8 GB RAM recommended for local development.
+    \item Cloud access for S3 and API-based model invocation.
+    \item Server infrastructure for deployment of API, database, Redis, and vector store.
+\end{itemize}
+
+\chapter{System Design and Architecture}
+\section{Architectural Overview}
+LensOS Version 2 follows a layered architecture:
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Presentation Layer:} React-based frontend for user interaction.
+    \item \textbf{API Layer:} FastAPI routes for authentication and asset workflows.
+    \item \textbf{Service Layer:} Business logic for assets, users, storage, vectors, captioning, and processing.
+    \item \textbf{Repository Layer:} Database and vector data access abstraction.
+    \item \textbf{Persistence Layer:} PostgreSQL, S3, Redis, and Qdrant.
+\end{itemize}
+
+\section{High-Level Workflow}
+\begin{figure}[H]
+\centering
+\fbox{\parbox{0.9\textwidth}{
+User Upload $\rightarrow$ File Validation $\rightarrow$ S3 Storage $\rightarrow$ PostgreSQL Asset Record $\rightarrow$ RQ Queue $\rightarrow$ Worker Processing $\rightarrow$ Caption + Tags + CLIP Embedding $\rightarrow$ Qdrant Vector Storage $\rightarrow$ Ready State $\rightarrow$ Semantic Search
+}}
+\caption{High-level workflow of LensOS Version 2}
+\end{figure}
+
+\section{Module Description}
+\subsection{Authentication Module}
+This module supports signup and login operations. It validates user credentials, stores hashed passwords, and returns token-based access for protected endpoints.
+
+\subsection{Asset Upload Module}
+This module accepts image files, validates file properties, uploads them to private cloud storage, creates metadata entries, and queues background processing.
+
+\subsection{Background Processing Module}
+This module downloads the stored image, generates caption and tags, extracts CLIP embeddings, updates the vector database, and marks the asset state accordingly.
+
+\subsection{Search Module}
+This module converts a text query into an embedding, runs vector search in Qdrant, filters results by user and threshold, and merges vector results with relational metadata.
+
+\subsection{Deletion Module}
+This module removes the image object from S3, deletes the PostgreSQL record, and removes the vector entry from Qdrant.
+
+\section{Database Design}
+\subsection{User Table}
+\begin{table}[H]
+\centering
+\caption{User Table Schema}
+\begin{tabularx}{\textwidth}{|l|l|X|}
+\hline
+\textbf{Field} & \textbf{Type} & \textbf{Description} \\
+\hline
+id & Integer & Primary key \\
+\hline
+first\_name & String(50) & User first name \\
+\hline
+last\_name & String(50) & User last name \\
+\hline
+email & String(70) & Unique email identifier \\
+\hline
+password & String(255) & Hashed password \\
+\hline
+\end{tabularx}
+\end{table}
+
+\subsection{Asset Table}
+\begin{table}[H]
+\centering
+\caption{Asset Table Schema}
+\begin{tabularx}{\textwidth}{|l|l|X|}
+\hline
+\textbf{Field} & \textbf{Type} & \textbf{Description} \\
+\hline
+id & Integer & Primary key \\
+\hline
+user\_id & Integer & Foreign key referencing user \\
+\hline
+file\_key & Text & Private S3 object key \\
+\hline
+status & String & Processing state: pending, processing, ready, failed \\
+\hline
+captions & Text & Auto-generated image description \\
+\hline
+tags & JSONB & Auto-generated metadata tags \\
+\hline
+created\_at & DateTime & Asset creation timestamp \\
+\hline
+\end{tabularx}
+\end{table}
+
+\section{Vector Data Design}
+Each vector point in Qdrant stores:
+\begin{itemize}[leftmargin=*]
+    \item point ID equal to the asset ID,
+    \item a 512-dimensional normalized CLIP embedding,
+    \item payload containing \texttt{user\_id} and \texttt{asset\_id}.
+\end{itemize}
+This supports user-level filtering during semantic search.
+
+\chapter{Implementation Details}
+\section{Frontend Implementation}
+The frontend is implemented using React and Vite. It consists of multiple pages and reusable UI components:
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Landing Page:} Introduces the platform and highlights AI-powered search.
+    \item \textbf{Login Page:} Accepts user credentials and performs authentication.
+    \item \textbf{Signup Page:} Implements form validation, password rules, and account creation flow.
+    \item \textbf{Dashboard Page:} Displays images, processing states, search bar, lightbox, and upload controls.
+\end{itemize}
+
+The dashboard includes automatic polling when uploads are in \texttt{pending} or \texttt{processing} state, improving the user experience without requiring manual refresh.
+
+\section{Backend Implementation}
+The backend is built with FastAPI and uses a clean organization of routers, services, repositories, models, and utility modules.
+
+\subsection{Main API Components}
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Auth Router:} Handles \texttt{/auth/signup} and \texttt{/auth/login}.
+    \item \textbf{Asset Router:} Handles upload, fetch, status, delete, and search operations.
+    \item \textbf{Lifespan Initialization:} Creates database tables and initializes vector database collection during startup.
+\end{itemize}
+
+\subsection{Asset Service Logic}
+The asset service handles:
+\begin{itemize}[leftmargin=*]
+    \item S3 uploads,
+    \item asset record creation,
+    \item enqueueing background jobs,
+    \item generating presigned URLs,
+    \item semantic query handling,
+    \item and asset deletion synchronization.
+\end{itemize}
+
+\subsection{Background Worker Logic}
+The worker uses RQ to process queued jobs. For each uploaded asset, it:
+\begin{enumerate}[leftmargin=*]
+    \item marks asset as processing,
+    \item downloads bytes from S3,
+    \item generates caption and tags,
+    \item computes image embedding using CLIP,
+    \item stores the vector in Qdrant,
+    \item updates final metadata and marks asset as ready.
+\end{enumerate}
+
+\subsection{File Validation}
+The validator currently accepts JPEG, PNG, and WEBP files with a size limit of 5 MB. This reduces invalid uploads and protects downstream services from unsupported data.
+
+\section{Core AI Pipeline}
+\subsection{Caption and Tag Generation}
+The system uses a vision-language inference route to request structured JSON output containing:
+\begin{itemize}[leftmargin=*]
+    \item a short caption under 15 words,
+    \item a list of five concise tags.
+\end{itemize}
+This metadata improves interpretability and allows the user interface to show meaningful descriptions even before a search is performed.
+
+\subsection{CLIP Embedding Generation}
+LensOS Version 2 uses \texttt{openai/clip-vit-base-patch32}. Image embeddings and text embeddings are both normalized into a shared vector space. This enables the system to compare a text query such as ``sunset on the beach'' directly against stored image embeddings.
+
+\subsection{Vector Search}
+Qdrant stores embeddings and performs similarity search. The search logic:
+\begin{itemize}[leftmargin=*]
+    \item limits results,
+    \item filters by user ID,
+    \item applies a minimum score threshold,
+    \item returns only assets that are ready and belong to the requesting user.
+\end{itemize}
+
+\section{Cloud Storage and Access Control}
+Images are stored in a private S3 bucket using unique object keys. Rather than storing public URLs, the system generates temporary presigned URLs when images need to be displayed. This improves privacy and control over content access.
+
+\chapter{Algorithms and Processing Flow}
+\section{Upload Algorithm}
+\begin{enumerate}[leftmargin=*]
+    \item Accept uploaded file from authenticated user.
+    \item Validate filename, content type, and file size.
+    \item Generate unique S3 object key.
+    \item Upload file to S3.
+    \item Insert asset metadata into PostgreSQL with pending state.
+    \item Enqueue background processing job.
+    \item Return asset ID and status to frontend.
+\end{enumerate}
+
+\section{Processing Algorithm}
+\begin{enumerate}[leftmargin=*]
+    \item Fetch asset record using asset ID and user ID.
+    \item Update status to processing.
+    \item Download image bytes from S3.
+    \item Generate caption and tags using AI inference.
+    \item Generate image embedding using CLIP.
+    \item Store vector with payload in Qdrant.
+    \item Update database record with caption, tags, and ready state.
+    \item If any step fails, mark asset as failed.
+\end{enumerate}
+
+\section{Semantic Search Algorithm}
+\begin{enumerate}[leftmargin=*]
+    \item Accept text query from authenticated user.
+    \item Generate text embedding using CLIP.
+    \item Query Qdrant for nearest vectors.
+    \item Filter results using user ID and threshold.
+    \item Fetch corresponding metadata records from PostgreSQL.
+    \item Generate presigned image URLs.
+    \item Return ranked semantic search results.
+\end{enumerate}
+
+\chapter{Results and Discussion}
+\section{Observed Outcomes}
+LensOS Version 2 demonstrates the following outcomes:
+\begin{itemize}[leftmargin=*]
+    \item Users can upload images securely without waiting for heavy AI processing to finish.
+    \item The dashboard reflects asset states such as pending, processing, ready, and failed.
+    \item Generated captions and tags provide meaningful summaries of image content.
+    \item Natural language search retrieves semantically related images instead of relying only on exact keyword matches.
+    \item User-specific filtering ensures that search results remain isolated per account.
+\end{itemize}
+
+\section{Improvements Over Version 1}
+\begin{table}[H]
+\centering
+\caption{Version 1 vs Version 2 Comparison}
+\begin{tabularx}{\textwidth}{|l|X|X|}
+\hline
+\textbf{Aspect} & \textbf{Version 1} & \textbf{Version 2} \\
+\hline
+Processing Flow & Likely more direct / less decoupled & Queue-based asynchronous processing \\
+\hline
+Storage Strategy & Basic image handling & Private S3 storage with presigned access \\
+\hline
+Search Capability & Foundational / basic & CLIP-based semantic retrieval \\
+\hline
+Scalability & Limited & Better through Redis + RQ + vector DB \\
+\hline
+Metadata Generation & Partial / simpler & Automated caption and tag pipeline \\
+\hline
+Architecture & More monolithic & Modular routers, services, repositories \\
+\hline
+User Experience & Basic workflow & Status-aware dashboard with polling \\
+\hline
+\end{tabularx}
+\end{table}
+
+\section{Discussion}
+The architectural decisions in Version 2 significantly improve robustness and extensibility. The use of asynchronous job execution reduces request latency during uploads. Qdrant provides efficient vector search, while PostgreSQL retains trustworthy relational metadata. By separating storage, processing, and retrieval responsibilities, the system becomes easier to test, scale, and maintain.
+
+At the same time, the project also reveals practical engineering considerations. AI-generated captions may occasionally be generic, threshold tuning affects retrieval quality, and remote inference introduces dependency on third-party service availability. These trade-offs are expected in multimodal systems and can be improved iteratively.
+
+\chapter{Testing Strategy}
+\section{Testing Objectives}
+The testing approach for LensOS Version 2 focuses on correctness, security, and end-to-end flow validation.
+
+\section{Test Cases}
+\begin{table}[H]
+\centering
+\caption{Representative Test Cases}
+\begin{tabularx}{\textwidth}{|c|X|X|X|}
+\hline
+\textbf{No.} & \textbf{Test Scenario} & \textbf{Expected Result} & \textbf{Status} \\
+\hline
+1 & User signup with valid data & Account created successfully & Passed / To Verify \\
+\hline
+2 & Login with correct credentials & Token issued and dashboard access granted & Passed / To Verify \\
+\hline
+3 & Upload valid JPEG/PNG/WEBP & Asset saved with pending status & Passed / To Verify \\
+\hline
+4 & Upload unsupported file type & Validation error returned & Passed / To Verify \\
+\hline
+5 & Background worker execution & Asset becomes ready with caption and tags & Passed / To Verify \\
+\hline
+6 & Semantic search with valid query & Relevant ready images returned & Passed / To Verify \\
+\hline
+7 & Search isolation across users & Results limited to requesting user & Passed / To Verify \\
+\hline
+8 & Delete asset & S3 object, DB record, and vector removed & Passed / To Verify \\
+\hline
+\end{tabularx}
+\end{table}
+
+\section{Possible Additional Testing}
+\begin{itemize}[leftmargin=*]
+    \item Load testing for concurrent uploads.
+    \item Fault injection for worker failures.
+    \item Search precision and recall evaluation using benchmark queries.
+    \item Security testing for token misuse and unauthorized asset access.
+\end{itemize}
+
+\chapter{Applications}
+LensOS Version 2 can be used in several domains:
+\begin{itemize}[leftmargin=*]
+    \item Personal photo organization.
+    \item Marketing and creative asset management.
+    \item E-commerce media search.
+    \item Educational and research image dataset exploration.
+    \item Newsroom and editorial content retrieval.
+    \item Portfolio and photography archive management.
+\end{itemize}
+
+\chapter{Limitations}
+Although LensOS Version 2 is significantly improved, it still has some limitations:
+\begin{itemize}[leftmargin=*]
+    \item Search quality depends on embedding quality and threshold tuning.
+    \item Caption generation can be inconsistent for ambiguous images.
+    \item Current upload size and format support are limited.
+    \item The system depends on external services for storage and AI inference.
+    \item The current report does not include benchmarked accuracy metrics from a formal evaluation dataset.
+\end{itemize}
+
+\chapter{Future Scope}
+The project has strong potential for future enhancement:
+\begin{itemize}[leftmargin=*]
+    \item Multilingual semantic search.
+    \item Duplicate and near-duplicate image detection.
+    \item Face clustering and event-based grouping.
+    \item Smart albums and recommendation-based organization.
+    \item Video support with frame-level indexing.
+    \item Mobile application integration.
+    \item Role-based team workspaces.
+    \item Improved ranking using reranking models or hybrid search.
+    \item Offline embedding generation using dedicated GPU infrastructure.
+\end{itemize}
+
+\chapter{Conclusion}
+LensOS Version 2 presents a practical and scalable approach to semantic image management. The system moves beyond traditional file-based organization by integrating modern AI models, asynchronous processing, cloud storage, and vector similarity search into a cohesive full-stack application. It enables users to retrieve images using natural language, automatically generates descriptive metadata, and maintains asset privacy through user-specific filtering and presigned object access.
+
+From a software engineering perspective, the project demonstrates the value of modular design, queue-driven processing, and specialized persistence layers for different data types. From an AI application perspective, it shows how multimodal embeddings can be converted into a useful end-user product. Overall, LensOS Version 2 serves as a strong foundation for intelligent media management systems and offers a meaningful advancement over a basic first-version implementation.
+
+\chapter*{References}
+\addcontentsline{toc}{chapter}{References}
+\begin{enumerate}[leftmargin=*]
+    \item Alec Radford et al., ``Learning Transferable Visual Models From Natural Language Supervision,'' 2021.
+    \item FastAPI Official Documentation. Available at: \url{https://fastapi.tiangolo.com/}
+    \item React Official Documentation. Available at: \url{https://react.dev/}
+    \item Qdrant Documentation. Available at: \url{https://qdrant.tech/documentation/}
+    \item Redis Queue (RQ) Documentation. Available at: \url{https://python-rq.org/}
+    \item Amazon S3 Documentation. Available at: \url{https://docs.aws.amazon.com/s3/}
+    \item Hugging Face Transformers Documentation. Available at: \url{https://huggingface.co/docs/transformers/index}
+    \item PostgreSQL Official Documentation. Available at: \url{https://www.postgresql.org/docs/}
+\end{enumerate}
+
+\chapter*{Appendix}
+\addcontentsline{toc}{chapter}{Appendix}
+
+\section*{Appendix A: Important Environment Variables}
+\begin{lstlisting}[caption={Representative backend environment variables}]
+DB_USER=
+DB_PASSWORD=
+DB_HOST=
+DB_PORT=
+DB_NAME=
+JWT_SECRET=
+JWT_ALGORITHM=
+AWS_ACCESS_KEY_ID=
+AWS_SECRET_ACCESS_KEY=
+AWS_REGION=
+AWS_BUCKET_NAME=
+HF_TOKEN=
+VECTOR_DB_URL=
+REDIS_URL=redis://localhost:6379/0
+RQ_QUEUE_NAME=asset-processing
+RQ_RETRY_MAX=3
+RQ_RETRY_INTERVAL=30
+RQ_JOB_TIMEOUT=900
+\end{lstlisting}
+
+\section*{Appendix B: Major API Endpoints}
+\begin{table}[H]
+\centering
+\caption{Major API Endpoints}
+\begin{tabularx}{\textwidth}{|l|l|X|}
+\hline
+\textbf{Method} & \textbf{Endpoint} & \textbf{Purpose} \\
+\hline
+POST & /auth/signup & Register new user \\
+\hline
+POST & /auth/login & Authenticate existing user \\
+\hline
+POST & /asset/upload & Upload image and queue processing \\
+\hline
+GET & /asset & Get all assets for current user \\
+\hline
+GET & /asset/\{asset\_id\}/status & Get asset processing status \\
+\hline
+POST & /asset/search & Semantic image search \\
+\hline
+DELETE & /asset/delete/\{asset\_id\} & Delete user asset \\
+\hline
+\end{tabularx}
+\end{table}
+
+\end{document}

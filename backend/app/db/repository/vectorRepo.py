@@ -39,7 +39,6 @@ class VectorRepository:
                 )
             )
             filtered_points = [point for point in results.points if point.score >= threshold]
-            print(filtered_points)
             return filtered_points
         except Exception as e: 
             raise HTTPException(status_code=500, detail="Vector search failed: " + str(e))

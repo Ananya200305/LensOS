@@ -1,6 +1,6 @@
 import logging
 
-from rq import Worker
+from rq import Worker, get_current_job
 
 from app.db.models.asset import Asset
 from app.db.models.user import User
@@ -14,18 +14,42 @@ logging.basicConfig(level=logging.INFO)
 
 
 def process_asset_job(asset_id: int, user_id: int, file_key: str):
-    logger.info("Starting asset job asset_id=%s user_id=%s", asset_id, user_id)
+    job = get_current_job()
+    job_id = job.id if job else None
+    logger.info("Starting asset job job_id=%s asset_id=%s user_id=%s", job_id, asset_id, user_id)
     session = SessionLocal()
 
     try:
-        AssetProcessingService(session=session).process_asset(
+        if job:
+            job.meta["asset_id"] = asset_id
+            job.meta["user_id"] = user_id
+            job.meta["status"] = "processing"
+            job.save_meta()
+
+        report = AssetProcessingService(session=session).process_asset(
             asset_id=asset_id,
             user_id=user_id,
             file_key=file_key,
         )
-        logger.info("Completed asset job asset_id=%s", asset_id)
-    except Exception:
-        logger.exception("Asset job failed asset_id=%s user_id=%s", asset_id, user_id)
+        if job:
+            job.meta["status"] = report.status
+            job.meta["completed_stages"] = report.completed_stages
+            job.meta["warnings"] = [warning.model_dump() for warning in report.warnings]
+            job.save_meta()
+        logger.info(
+            "Completed asset job job_id=%s asset_id=%s status=%s stages=%s warnings=%s",
+            job_id,
+            asset_id,
+            report.status,
+            report.completed_stages,
+            len(report.warnings),
+        )
+    except Exception as error:
+        if job:
+            job.meta["status"] = "failed"
+            job.meta["error"] = str(error)
+            job.save_meta()
+        logger.exception("Asset job failed job_id=%s asset_id=%s user_id=%s", job_id, asset_id, user_id)
         raise
     finally:
         session.close()

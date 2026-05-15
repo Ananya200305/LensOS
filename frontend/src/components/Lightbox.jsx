@@ -1,7 +1,11 @@
-import { X, ChevronLeft, ChevronRight } from "lucide-react";
-import { useEffect } from "react";
+import { X, ChevronLeft, ChevronRight, Trash2, RefreshCcw } from "lucide-react";
+import { useEffect, useState } from "react";
+import { getAssetIntelligence } from "../api/assetApi";
 
-function Lightbox({ images, index, setIndex, onClose }) {
+function Lightbox({ images, index, setIndex, onClose, onDelete, onReprocess, isReprocessing }) {
+  const [cinematicAnalysis, setCinematicAnalysis] = useState(null);
+  const [isLoadingAnalysis, setIsLoadingAnalysis] = useState(false);
+
   if (index === null) return null;
 
   const next = () => {
@@ -51,6 +55,47 @@ function Lightbox({ images, index, setIndex, onClose }) {
   }, [index]);
 
   const image = images[index];
+  const isReady = image?.status === "ready";
+
+  useEffect(() => {
+    let isCancelled = false;
+
+    const loadCinematicAnalysis = async () => {
+      if (!image?.id || image.status !== "ready") {
+        setCinematicAnalysis(null);
+        setIsLoadingAnalysis(false);
+        return;
+      }
+
+      try {
+        setIsLoadingAnalysis(true);
+        const response = await getAssetIntelligence(image.id);
+        if (!isCancelled) {
+          setCinematicAnalysis(response.data);
+        }
+      } catch (error) {
+        if (!isCancelled) {
+          console.log(error);
+          setCinematicAnalysis(null);
+        }
+      } finally {
+        if (!isCancelled) {
+          setIsLoadingAnalysis(false);
+        }
+      }
+    };
+
+    loadCinematicAnalysis();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [image?.id, image?.status]);
+
+  const handleDelete = () => {
+    onDelete(image.id);
+    onClose();
+  };
 
   return (
     <div className="fixed inset-0 bg-black flex flex-col z-50">
@@ -60,7 +105,7 @@ function Lightbox({ images, index, setIndex, onClose }) {
           {index + 1} / {images.length}
         </p>
         <p className="text-sm text-gray-300 text-center max-w-2xl">
-          {image.caption}
+          {image.caption || "Processing image..."}
         </p>
 
         <button onClick={onClose} className="text-gray-400 hover:text-white">
@@ -81,6 +126,7 @@ function Lightbox({ images, index, setIndex, onClose }) {
         {/* Image */}
         <img
           src={image.image_url}
+          alt={image.caption || "Selected asset"}
           className="max-h-[75vh] max-w-[85vw] object-contain rounded-lg"
         />
 
@@ -95,27 +141,84 @@ function Lightbox({ images, index, setIndex, onClose }) {
 
       {/*BOTTOM ACTION BAR */}
       <div className="border-t border-[#1E293B] px-6 py-4 bg-black/80 backdrop-blur">
-        <div className="flex justify-between items-center">
-          <div className="flex gap-3">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div className="min-w-0 flex-1">
+            <p className="mb-2 text-[11px] uppercase tracking-[0.22em] text-gray-500">
+              Cinematic Analysis
+            </p>
+
+            {isReady && isLoadingAnalysis && (
+              <p className="text-sm text-gray-400">Loading scene intelligence...</p>
+            )}
+
+            {!isReady && (
+              <p className="text-sm text-gray-400">
+                Cinematic analysis will be available once processing is complete.
+              </p>
+            )}
+
+            {isReady && !isLoadingAnalysis && cinematicAnalysis && (
+              <div className="flex flex-wrap gap-2 text-xs text-gray-200">
+                {cinematicAnalysis.scene_label && (
+                  <span className="rounded-full border border-[#334155] px-3 py-1">
+                    Scene: {cinematicAnalysis.scene_label}
+                  </span>
+                )}
+                {cinematicAnalysis.environment_label && (
+                  <span className="rounded-full border border-[#334155] px-3 py-1">
+                    Environment: {cinematicAnalysis.environment_label}
+                  </span>
+                )}
+                {cinematicAnalysis.time_label && (
+                  <span className="rounded-full border border-[#334155] px-3 py-1">
+                    Time: {cinematicAnalysis.time_label}
+                  </span>
+                )}
+                {cinematicAnalysis.detected_objects?.map((objectName) => (
+                  <span
+                    key={objectName}
+                    className="rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-amber-100"
+                  >
+                    {objectName}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="flex justify-between items-center gap-4">
+            <div className="flex gap-3">
             <button
               onClick={() => downloadOriginal(image)}
-              className="px-3 py-1 bg-[#1E293B] rounded hover:bg-[#334155]"
+              disabled={!isReady}
+              className="px-3 py-1 bg-[#1E293B] rounded hover:bg-[#334155] disabled:cursor-not-allowed disabled:opacity-50"
             >
               Download
             </button>
 
-            <button className="px-3 py-1 bg-[#1E293B] rounded hover:bg-[#334155]">
-              Edit
-            </button>
-
-            <button className="px-3 py-1 bg-red-600/80 rounded hover:bg-red-600">
+            <button
+              onClick={handleDelete}
+              className="flex items-center gap-2 px-3 py-1 bg-red-600/80 rounded hover:bg-red-600"
+            >
+              <Trash2 size={14} />
               Delete
             </button>
-          </div>
 
-          <p className="text-xs text-gray-500">
-            Score: {image.score?.toFixed(2) ?? "N/A"}
-          </p>
+            <button
+              onClick={() => onReprocess?.(image.id)}
+              disabled={isReprocessing || !image?.id}
+              className="flex items-center gap-2 px-3 py-1 bg-sky-700/80 rounded hover:bg-sky-600 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <RefreshCcw size={14} />
+              {isReprocessing ? "Queued" : "Reprocess"}
+            </button>
+            </div>
+
+            <div className="text-right text-xs text-gray-500">
+              <p>Status: {image.status ?? "unknown"}</p>
+              <p>Score: {image.score?.toFixed(2) ?? "N/A"}</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>

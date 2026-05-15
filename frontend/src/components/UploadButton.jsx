@@ -1,5 +1,4 @@
 import React from "react";
-import { uploadAsset } from "../api/assetApi";
 import { Upload } from "lucide-react";
 
 function UploadButton({ onUpload, isUploading }) {

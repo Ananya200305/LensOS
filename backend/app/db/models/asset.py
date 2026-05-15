@@ -1,7 +1,8 @@
 from app.core.database import Base
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Text
+from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Text, Float
 from sqlalchemy.sql import func
 from sqlalchemy.dialects.postgresql import JSONB
+
 
 class Asset(Base):
 
@@ -18,5 +19,12 @@ class Asset(Base):
     captions = Column(Text, nullable=True)
     #metadata tags
     tags = Column(JSONB, nullable=True)
+    #intelligence metadata extracted by V3 workers
+    detected_objects = Column(JSONB, nullable=True, default=list)
+    scene_label = Column(String(100), nullable=True)
+    time_label = Column(String(100), nullable=True)
+    environment_label = Column(String(100), nullable=True)
+    processed_at = Column(DateTime(timezone=True), nullable=True)
+    ranking_score = Column(Float, nullable=False, default=0.0)
     #timestamp
     created_at = Column(DateTime(timezone=True), server_default=func.now())

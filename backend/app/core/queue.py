@@ -25,3 +25,11 @@ def enqueue_asset_processing(asset_id: int, user_id: int, file_key: str):
         retry=Retry(max=RQ_RETRY_MAX, interval=[RQ_RETRY_INTERVAL] * RQ_RETRY_MAX),
         job_timeout=RQ_JOB_TIMEOUT,
     )
+
+
+def enqueue_asset_reprocess(asset_id: int, user_id: int, file_key: str):
+    return enqueue_asset_processing(
+        asset_id=asset_id,
+        user_id=user_id,
+        file_key=file_key,
+    )
